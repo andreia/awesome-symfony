@@ -37,10 +37,10 @@ Contributions are highly encouraged and very welcome :)
     - [Assets Versioning](#assets-versioning)
     - [Localized Date String](#localized-date-string)
     - [Inject All GET Parameters in a Route](#inject-all-GET-parameters-in-a-route)
-    - [Make the `form_rest()` and `form_end()` not Display a Specific Field](#make-the-form-rest-and-form-end-not-display-a-specific-field)
+    - [Make the `form_rest()` and `form_end()` not Display a Specific Field](#make-the-form_rest-and-form_end-not-display-a-specific-field)
     - [Render Just the Close Form HTML Tag](#render-just-the-close-form-html-tag)
     - [Render a Template without a Specific Controller for a Static Page](#render-a-template-without-a-specific-controller-for-a-static-page)
-    - [Using Localized Data (Date, Currency, Number, ...)](#using-localized-data-date-currency-number)
+    - [Using Localized Data (Date, Currency, Number, ...)](#using-localized-data-date-currency-number-)
 
 ## Configuration
 
