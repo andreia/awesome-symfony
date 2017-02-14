@@ -304,16 +304,16 @@ framework:
 
 services:
     app.profiler_matcher:
-        class: AppBundleProfilerMatcher
+        class: AppBundle\Profiler\Matcher
         arguments: ["@security.context"]
 ```
 
 ```php
-namespace AppBundleProfiler; 
+namespace AppBundle\Profiler; 
 
-use SymfonyComponentSecurityCoreSecurityContext; 
-use SymfonyComponentHttpFoundationRequest; 
-use SymfonyComponentHttpFoundationRequestMatcherInterface; 
+use Symfony\Component\Security\Core\SecurityContext; 
+use Symfony\Component\HttpFoundation\Request; 
+use Symfony\Component\HttpFoundation\RequestMatcherInterface; 
 
 class Matcher implements RequestMatcherInterface 
 { 
