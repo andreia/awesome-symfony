@@ -231,7 +231,7 @@ monolog:
 # app/config/config_prod.yml
 services:
     monolog_processor:
-        class: MonologProcessorPsrLogMessageProcessor
+        class: Monolog\Processor\PsrLogMessageProcessor
         tags:
             - { name: monolog.processor }
 ```
