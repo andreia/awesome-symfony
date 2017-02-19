@@ -10,6 +10,7 @@ Contributions are highly encouraged and very welcome :)
     - [Assets](#assets)
     - [Directories, Paths](#directories-paths)
     - [Email Errors](#email-errors)
+    - [Import](#import)
     - [Log](#log)
     - [Security](#security)
     - [Session](#session)
@@ -35,9 +36,12 @@ Contributions are highly encouraged and very welcome :)
 - [Twig](#twig)
     - [Absolute URLs](#absolute-urls)
     - [Assets Versioning](#assets-versioning)
+    - [Get the Authenticated Username](#get-the-authenticated-username)
     - [Localized Date String](#localized-date-string)
     - [Inject All GET Parameters in a Route](#inject-all-GET-parameters-in-a-route)
     - [Make the `form_rest()` and `form_end()` not Display a Specific Field](#make-the-form_rest-and-form_end-not-display-a-specific-field)
+    - [Override the 404 Error Template](#override-the-404-error-template)
+    - [Render a Controller Asynchronously](#render-a-controller-asynchronously)
     - [Render Just the Close Form HTML Tag](#render-just-the-close-form-html-tag)
     - [Render a Template without a Specific Controller for a Static Page](#render-a-template-without-a-specific-controller-for-a-static-page)
     - [Using Localized Data (Date, Currency, Number, ...)](#using-localized-data-date-currency-number-)
@@ -47,8 +51,8 @@ Contributions are highly encouraged and very welcome :)
 ### Assets
 
 #### Assets Base URL
+`Symfony 2.6`
 ```yaml
-# Symfony 2.6
 # app/config/config.yml
 framework:
     templating:
@@ -57,8 +61,10 @@ framework:
             ssl:  ['https://secure.domain.com']
         packages:
             # ...
+```
 
-# Symfony 2.7+
+`Symfony 2.7+`
+```yaml
 # app/config/config.yml
 framework:
     assets:
@@ -76,15 +82,17 @@ framework:
 ```
 
 #### Assets Versioning
+`Symfony 2.6`
 ```yaml
-# Symfony 2.6
 # app/config/config.yml
 framework:
     templating:
         assets_version: 'v5'
         assets_version_format: '%%s?version=%%s'
+```
 
-# Symfony 2.7+
+`Symfony 2.7+`
+```yaml
 # app/config/config.yml
 framework:
     assets:
@@ -224,6 +232,41 @@ monolog:
             level: debug
 ```
 
+### Import
+
+#### Import Mixed Configuration Files
+```yaml
+# app/config/config.yml
+imports:
+    - { resource: '../common/config.yml' }
+    - { resource: 'dynamic-config.php' }
+    - { resource: 'parameters.ini' }
+    - { resource: 'security.xml' }
+    # ...
+```
+
+#### Import All Resources From a Directory
+```yaml
+# app/config/config.yml
+imports:
+    - { resource: '../common/' }
+    - { resource: 'acme/' }
+    # ...
+```
+
+#### Import Configuration Files Using Glob Patterns
+`Symfony 3.3`
+```yaml
+# app/config/config.yml
+imports:
+    - { resource: "*.yml" }
+    - { resource: "common/**/*.xml" }
+    - { resource: "/etc/myapp/*.{yml,xml}" }
+    - { resource: "bundles/*/{xml,yaml}/services.{yml,xml}" }
+    # ...
+```
+[[1]](http://symfony.com/blog/new-in-symfony-3-3-import-config-files-with-glob-patterns)
+
 ### Log
 
 #### Enable the Monolog processor PsrLogMessageProcessor
@@ -334,11 +377,12 @@ class Matcher implements RequestMatcherInterface
 ## Console
 
 ### Parallel Asset Dump
-Symfony 2.8
+`Symfony 2.8`
 ```bash
     $ php app/console --env=prod assetic:dump --forks=4
 ```
-Symfony 3+
+
+`Symfony 3+`
 ```bash
     $ php bin/console --env=prod assetic:dump --forks=4
 ```
@@ -460,8 +504,8 @@ $session->getFlashBag()->add('error', 'Invalid email');
 ### Form
 
 #### Get Errors for All Form Fields
+`Symfony 2.5+`
 ```php
-// Symfony 2.5+
 $allErrors = $form->getErrors(true);
 ```
 
@@ -517,8 +561,8 @@ $response = new RedirectResponse('http://domain.com');
 
 #### Get the Request Object
 
+`Symfony 2`
 ```php
-// Symfony 2
 namespace Acme\FooBundle\Controller;
 
 class DemoController
@@ -529,8 +573,10 @@ class DemoController
        // ...
    }
 }
+```
 
-// Symfony 3
+`Symfony 3`
+```php
 namespace Acme\FooBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
@@ -588,11 +634,13 @@ $response->setStatusCode(Response::HTTP_NOT_FOUND);
 ### Routing
 
 #### Generate Absolute URL
+`Symfony 2`
 ```php
-// Symfony 2
 $this->generateUrl('blog_show', array('slug' => 'my-blog-post'), true);
+```
 
-// Symfony 3
+`Symfony 3`
+```php
 $this->generateUrl('blog_show', array('slug' => 'my-blog-post'), UrlGeneratorInterface::ABSOLUTE_URL);
 ```
 
@@ -633,26 +681,36 @@ try {
 ## Twig
 
 ### Absolute URLs
+`Symfony 2.6`
 ```twig
-{# Symfony 2.6 #}
 {{ asset('logo.png', absolute = true) }}
+```
 
-{# Symfony 2.7 #}
+`Symfony 2.7+`
+```twig
 {{ absolute_url(asset('logo.png')) }}
 ```
 
 ### Assets Versioning
+`Symfony 2.6`
 ```twig
-{# Symfony 2.6 #}
 {{ asset('logo.png', version = 'v5') }}
+```
 
-{# Symfony 2.7 (do nothing, version is automatically appended) #}
+`Symfony 2.7+`
+Version is automatically appended.
+```twig
 {{ asset('logo.png') }}
 
 {# use the asset_version() function if you need to output it manually #}
 {{ asset_version('logo.png') }}
 ```
 [[1]](http://symfony.com/blog/new-in-symfony-2-7-the-new-asset-component#template-function-changes)
+
+### Get the Authenticated Username
+```twig
+{{ app.user.username }}
+```
 
 ### Localized Date String
 In your Twig template, you can use [pre-defined](http://twig.sensiolabs.org/doc/extensions/intl.html) or [custom date formats](http://userguide.icu-project.org/formatparse/datetime) with the `localizeddate`:
@@ -685,6 +743,21 @@ static_page:
         _controller: FrameworkBundle:Template:template
         template: AppBundle:default:about.html.twig
 ```
+
+### Override the 404 Error Template
+Create a new `error404.html.twig` template at:
+```twig
+app/Resources/TwigBundle/views/Exception/
+```
+[[1]](https://symfony.com/doc/current/controller/error_pages.html#example-404-error-template)
+
+### Render a Controller Asynchronously
+```twig
+{{ render_hinclude(controller('AppBundle:Features:news', {
+    'default': 'Loading...'
+})) }}
+```
+[[1]](http://symfony.com/doc/current/templating/hinclude.html)
 
 ### Render Just the Close Form HTML Tag
 ```twig
