@@ -792,7 +792,7 @@ try {
 # config/services.yaml
 bind:
     string $name: '%env(name)%'
-```yaml
+```
 
 Implement the `EnvVarLoaderInterface` in a service:
 ```php
