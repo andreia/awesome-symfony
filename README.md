@@ -9,10 +9,21 @@ Contributions are highly encouraged and very welcome :)
 - [Configuration](#configuration)
     - [Assets](#assets)
     - [Directories, Paths](#directories-paths)
+        - [Get the Project Root Directory](#get-the-project-root-directory)
     - [Email Errors](#email-errors)
+        - [Email Logs Related to 5xx Errors (action_level: critical)](#email-logs-related-to-5xx-errors-action_level-critical)
+        - [Email Logs Related to 4xx Errors (action_level: error)](#email-logs-related-to-4xx-errors-action_level-error)
+        - [Do Not Email Logs for 404 Errors (excluded_404)](#do-not-email-logs-for-404-errors-excluded_404)
     - [Import](#import)
+        - [Import Mixed Configuration Files](#import-mixed-configuration-files)
+        - [Import All Resources From a Directory](#import-all-resources-from-a-directory)
+        - [Import Configuration Files Using Glob Patterns](#import-configuration-files-using-glob-patterns)
     - [Log](#log)
+        - [Enable the Monolog processor PsrLogMessageProcessor](#enable-the-monolog-processor-psrlogmessageprocessor)
+        - [Hide Event Logs](#hide-event-logs)
+        - [Organizing Log Files Using Channels (Log Messages to Different Files)](#organizing-log-files-using-channels-log-messages-to-different-files))
     - [Security](#security)
+        - [Impersonating Users](#impersonating-users)
     - [Session](#session)
     - [Profiler](#profiler)
 - [Console](#console)
@@ -28,8 +39,14 @@ Contributions are highly encouraged and very welcome :)
     - [Request](#request)
     - [Response](#response)
     - [Routing](#routing)
+        - [External URLs](#external-urls)
+        - [External URLs - Using a Key to Reference a URL](#external-urls-using-a-key-to-reference-a-url)
     - [Service](#service)
+        - [Retrieve a Service](#retrieve-a-service)
     - [YAML](#yaml)
+        - [Parse YAML File](#parse-yaml-file)
+- [Environment Variables](#environment-variables)
+    - [Custom Loader for Environment Variables](#custom-loader-for-environment-variables)
 - [Routing](#routing)
     - [Generate Absolute URL](#generate-absolute-url)
     - [Trailing Slash with an Optional Parameter](#trailing-slash-with-an-optional-parameter)
@@ -37,6 +54,7 @@ Contributions are highly encouraged and very welcome :)
     - [Absolute URLs](#absolute-urls)
     - [Assets Versioning](#assets-versioning)
     - [Get the Authenticated Username](#get-the-authenticated-username)
+    - [Get the Base URL](#get-the-base-url)
     - [Localized Date String](#localized-date-string)
     - [Inject All GET Parameters in a Route](#inject-all-get-parameters-in-a-route)
     - [Make the `form_rest()` and `form_end()` not Display a Specific Field](#make-the-form_rest-and-form_end-not-display-a-specific-field)
@@ -159,13 +177,49 @@ Using the `avatars` package in a Twig template:
 
 ### Directories, Paths
 
-#### Get Root Project Directory
+#### Get the Project Root Directory
 
-Use `%kernel.root_dir%/../`:
+Use the config parameter `%kernel.root_dir%/../`:
 ```yaml
 some_service:
     class: \path\to\class
     arguments: [%kernel.root_dir%/../]
+```
+
+`Symfony 2`
+In a Controller:
+
+`$projectRoot = $this->container->getParameter('kernel.root_dir');`
+
+`Symfony 3.3`
+
+In a Controller:
+
+`$projectRoot = $this->get('kernel')->getProjectDir();`
+
+`Symfony 4+`
+
+Using autowiring (argument binding):
+```yaml
+# config/services.yaml
+services:
+    _defaults:
+        bind:
+            string $projectDir: '%kernel.project_dir%'
+```
+
+Then in your class:
+```php
+class YourClass
+{
+    private $projectDir;
+
+    public function __construct(string $projectDir)
+    {
+        $this->$projectDir = $projectDir;
+    }
+
+    // ...
 ```
 
 ### Email Errors
@@ -291,7 +345,7 @@ monolog:
             channels: "!event"
 ```
 
-### Organizing Log Files Using Channels (Log Messages to Different Files)
+#### Organizing Log Files Using Channels (Log Messages to Different Files)
 ```yaml
 # app/config/config_prod.yml
 monolog:
@@ -633,6 +687,32 @@ $response->setStatusCode(Response::HTTP_NOT_FOUND);
 
 ### Routing
 
+#### External URLs
+```yaml
+google_search:
+    path: /search
+    host: www.google.com
+```
+
+```twig
+<a href="{{ url('google_search', {q: 'Jules Verne'}) }}">Jules Verne</a>
+```
+
+#### External URLs - Using a Key to Reference a URL
+```yaml
+framework:
+    assets:
+        packages:
+            symfony_site:
+                version: ~
+                base_urls: 'https://symfony.com/images'
+```
+
+Add images from the URL above into your views, using the "symfony_site" key in the second argument of asset():
+```twig
+<img src="{{ asset('logos/header-logo.svg', 'symfony_site') }}">
+```
+
 #### Generate Absolute URL
 `Symfony 2`
 ```php
@@ -664,6 +744,32 @@ or
 $this->container->get('service.name'),
 ```
 
+`Symfony 4+`
+
+Using autowiring, just type-hint the desired service. E.g. getting the routing service:
+
+```php
+use Symfony\Component\Routing\RouterInterface;
+
+class SomeClass
+{
+    private $router;
+
+    public function __construct(RouterInterface $router)
+    {
+        $this->router = $router;
+    }
+
+    public function doSomething($id)
+    {
+        $url = $this->router->generate('route_name', ['id' => $id]);
+
+        // ...
+    }
+
+    // ...
+```
+
 ### YAML
 
 #### Parse YAML File
@@ -677,6 +783,47 @@ try {
 }
 ```
 [[1]](http://symfony.com/doc/current/components/yaml.html#using-the-symfony-yaml-component)
+
+## Environment Variables
+
+### Custom Loader for Environment Variables
+`Symfony 4.4`
+```yaml
+# config/services.yaml
+bind:
+    string $name: '%env(name)%'
+```yaml
+
+Implement the `EnvVarLoaderInterface` in a service:
+```php
+namespace App\Env;
+
+use Symfony\Component\DependencyInjection\EnvVarLoaderInterface;
+
+class ConsulEnvVarLoader implements EnvVarLoaderInterface
+{
+    public function loadEnvVars(): array
+    {
+        $response = file_get_contents('http://127.0.0.1:8500/v1/kv/website-config');
+
+        $consulValue = json_decode($response, true)[0]['Value'];
+        $decoded = json_decode(base64_decode($consulValue), true);
+
+        // e.g.:
+        // array:1 [
+        //     "name" => "my super website"
+        // ]
+
+        return $decoded;
+    }
+}
+```
+
+Update the consul KV:
+```bash
+./consul  kv put website-config '{"name": "Symfony read this var from consul"}'
+```
+[[1]](https://github.com/symfony/symfony/pull/34295#issuecomment-551899027)
 
 ## Twig
 
@@ -721,6 +868,11 @@ In your Twig template, you can use [pre-defined](http://twig.sensiolabs.org/doc/
 The pattern `"cccc, d MMMM Y 'às' hh:mm aaa"` will show the date in this format:
 
 `domingo, 5 janeiro 2014 às 03:00 am`
+
+#### Get the Base URL
+```php
+{{ app.request.getSchemeAndHttpHost() }}
+```
 
 ### Inject All GET Parameters in a Route
 ```twig
